@@ -1,0 +1,36 @@
+name: Sync with Upstream
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Berjalan otomatis setiap hari sekali
+  workflow_dispatch:     # Tombol manual di tab Actions GitHub
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Your Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git Identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Add Upstream Remote and Pull
+        run: |
+          git remote add upstream https://github.com/karya-media/media.git
+          git fetch upstream
+          git checkout main || git checkout master
+          
+          # Melakukan merge dari repository sumber, mengabaikan konflik pada file kustom Anda jika ada
+          git merge upstream/main --allow-unrelated-histories -X ours --no-edit || git merge upstream/master --allow-unrelated-histories -X ours --no-edit
+
+      - name: Push Changes to Your Repository
+        run: |
+          git push origin main || git push origin master
